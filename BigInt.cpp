@@ -157,9 +157,6 @@ bigint shiftleft(bigint a, int count) {
 	if (count >= 8) {
 		ans.digit_c = count / 8 + a.digit_c;
 		ans.data = (unsigned char*)calloc(ans.digit_c, 1);
-		/*for (int i = 0; i < ans.digit_c - a.digit_c; i++) {
-			ans.data[i] = 0;
-		}*/
 		memcpy(&ans.data[ans.digit_c - a.digit_c], a.data, a.digit_c);
 		count = count - (count / 8) * 8;
 	}
@@ -231,20 +228,6 @@ bool operator != (bigint a, bigint b) {
 }
 
 bigint operator+(bigint a, bigint b) {
-	/*bigint zero, _b, ans;
-	zero = itoBigInt(0);
-	_b = duplicate(b);
-	ans = duplicate(a);	
-	bigint carry = init();
-	while (_b != zero) {
-		carry = (ans & _b);
-		ans = (ans ^ _b);
-		_b = shiftleft(carry, 1);
-	}
-	if (b != zero)	dispose(carry);
-	dispose(zero);
-	dispose(_b);
-	*/
 	int min = a.digit_c < b.digit_c ? a.digit_c : b.digit_c;
 	int max = a.digit_c + b.digit_c - min;
 	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
@@ -316,35 +299,6 @@ bigint operator-(bigint a, bigint b) {
 }
 
 bigint operator*(bigint a, bigint b) {
-	/*bigint zero, one, res, _a, _b;
-	zero = itoBigInt(0);
-	one = itoBigInt(1);
-	res = itoBigInt(0);
-	_a = duplicate(a);
-	_b = duplicate(b);
-	if (_a.digit_c < _b.digit_c) {
-		bigint temp = init();
-		temp = duplicate(_a);
-		_a = duplicate(_b);
-		_b = duplicate(temp);
-		//_b = temp;
-		dispose(temp);
-	}
-	while (_b > zero) {
-		bigint temp = init();
-		temp = _b & one;
-		if (temp != zero) {
-			res = res + _a;
-		}
-		_a = shiftleft(_a, 1);
-		_b = shiftright(_b, 1);
-		dispose(temp);
-	}
-	dispose(_a);
-	dispose(_b);
-	dispose(one);
-	dispose(zero);
-	return res;*/
 	bigint ans = init();
 	ans.digit_c = b.digit_c + a.digit_c - 1;
 	ans.data = (unsigned char*)calloc(ans.digit_c, 1);
@@ -406,7 +360,6 @@ bigint simple_divide(bigint a, bigint b) {
 	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2);
 	
 	_b = shiftleft(_b, bit);
-	double countTime1 = 0, countTime2 = 0;
 	while (bit >= 0) {
 		if (!(_a < _b)) {
 			res.data[0] = res.data[0] + 1;
@@ -419,8 +372,6 @@ bigint simple_divide(bigint a, bigint b) {
 		
 		bit--;
 	}
-	//printf("Time spent 1: %lf\n", countTime1);
-	//printf("Time spent 2: %lf\n", countTime2);
 	dispose(_b);
 	dispose(_a);
 	dispose(one);
@@ -458,17 +409,9 @@ bigint advanced_divide(bigint a, bigint b) {
 			else count2++;
 		}
 	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2);
-	//printf("bit: %d\n", bit);
-	//printf("a: "); print(_a, 2); printf("\n");
-	//printf("b: "); print(_b, 2); printf("\n");
-	
 	if (count2 < count) 
 		_a = shiftleft(_a, count - count2);
 	else if (count2 > count) _a = shiftleft(_a, 8 - count2 + count);
-	
-	//printf("a (2): "); print(_a, 2); printf("\n");
-	//printf("a (256): "); print(_a, 10); printf("\n");
-	
 	res.digit_c = bit / 8 + 1;
 	res.data = (unsigned char*) calloc(res.digit_c, 1);
 	t_a.data = new unsigned char[b.digit_c];
@@ -478,26 +421,20 @@ bigint advanced_divide(bigint a, bigint b) {
 	int rad = 7, stt = _a.digit_c - _b.digit_c;
 	stt -= stt > 0 ? 1 : 0;
 	for (; bit >= 0; bit--) {
-		//printf("bit %d: ", bit);  print(t_a, 2); printf("\n");
 		if (!(t_a < _b)) {
 			t_a = t_a - _b;
 			res.data[bit / 8] += (int)pow(2, bit % 8);
-			//printf("1");
 		}
-		//else printf("0");
-		
 		t_a = shiftleft(t_a, 1);
 		if (stt >= 0 && _a.data[stt] >= pow(2, rad)) {
 			_a.data[stt] -= (int) pow(2, rad);
 			t_a.data[0] += 1;
 		}
-		
 		if (rad == 0) {
 			rad = 8;
 			stt--;
 		}
-		rad--;
-				
+		rad--;		
 	}
 	dispose(_a);
 	dispose(_b);
@@ -606,7 +543,6 @@ unsigned char* to_decimal(bigint a, int& count) {
 	count = 0;
 	int index = 0;
 	t_a = abs(t_a);
-	int abc = 0;
 	while (t_a > zero) {
 		bigint temp = init();
 		clock_t begin = clock();
@@ -616,16 +552,12 @@ unsigned char* to_decimal(bigint a, int& count) {
 		temp = t_a - temp;
 		t_a = duplicate(t);
 		dispose(t);
-		//printf("Time spent chia het: %lf\n", (double)(clock() - begin) / CLOCKS_PER_SEC);
 		unsigned long long int a = 0;
-		for (int i = temp.digit_c - 1; i >= 0; i--) a = a * 256 + (unsigned long long int) temp.data[i];
-		//printf("a%d:", abc);
-		abc++;
+		for (int i = temp.digit_c - 1; i >= 0; i--) a = a * 256 + (unsigned long long int) temp.data[i];		
 		if (t_a > zero) {
 			int digit = 10;
 			while (digit > 0) {
 				pans[index] = a % 10;
-				//printf("%d", pans[index]);
 				a /= 10;
 				index++;
 				if (index == 1000) {
@@ -642,7 +574,6 @@ unsigned char* to_decimal(bigint a, int& count) {
 		else {
 			while (a > 0) {
 				pans[index] = a % 10;
-				//printf("%d", pans[index]);
 				a /= 10;
 				index++;
 				if (index == 1000) {
@@ -655,10 +586,6 @@ unsigned char* to_decimal(bigint a, int& count) {
 				}
 			}
 		}
-		//printf("\n");
-		//begin = clock();
-		
-		//printf("Time spent /: %lf\n", (double)(clock() - begin) / CLOCKS_PER_SEC);
 		dispose(temp);
 
 	}
@@ -796,32 +723,153 @@ bigint randBigInt(bigint max) {
 	ans.digit_c = max.digit_c;
 	bool isZero = true;
 	bool isSmaller = false;
-	srand(time(0));
 	if (max.digit_c == 1) 
 		ans.data[0] = randint(2, max.data[0]);
 	else {
 		for (int i = max.digit_c - 1; i >= 0; i--) {
-			int t = -1;
 			if (!isSmaller) {
-				t = randint(0, 1);
-				isSmaller = t;
+				ans.data[i] = randint(0, max.data[i]);
+				isSmaller = ans.data[i] < max.data[i];
 			}
-			if (t == -1)
+			else {
 				ans.data[i] = randint(0, 255);
-			else if (t == 0)
-				ans.data[i] = max.data[i];
-			else 
-				ans.data[i] = randint(0, max.data[i] - 1);
-			if (ans.data[i] != 0) isZero = false;
-			if (isZero) {
-				if (i == 0) ans.data[i] = randint(2, 255);
-				else ans.digit_c--;
 			}
+			isZero = (ans.data[i] == 0) && isZero;
+			if (isZero && (i == 0)) {
+				ans.data[i] = randint(2, 255);
+				isZero = false;
+			}
+			else if (isZero) ans.digit_c--;
 		}
 	}
 	if (ans.digit_c < max.digit_c) ans.data = (unsigned char*)realloc(ans.data, ans.digit_c);
 	ans.sign = true;
 	return ans;
+}
+
+/*Return: (x^y) % p*/
+bigint miillerPow(bigint x, bigint y, bigint p) {
+	bigint res, _x, _y, _p, zero;
+
+	res = itoBigInt(1);
+	zero = itoBigInt(0);
+	_x = duplicate(x);
+	_y = duplicate(y);
+	_p = duplicate(p);
+
+	_x = _x % _p;
+
+	while (_y > zero) {
+		if (_y.data[0] & 1) {
+			res = res * _x;
+			res = res % _p;
+		}
+		_y = shiftright(_y, 1);
+		_x = _x * _x;
+		_x = _x % _p;
+	}
+	dispose(_x);
+	dispose(_y);
+	dispose(_p);
+	dispose(zero);
+	return res;
+}
+
+bool miillerTest(bigint d, bigint n) {
+	bigint _a = init(), _d, _x = init(), four, two, one, temp = init();
+	four = itoBigInt(4);
+	two = itoBigInt(2);
+	one = itoBigInt(1);
+	_d = duplicate(d);
+	temp = n - two;
+	_a = randBigInt(temp);
+
+	_x = miillerPow(_a, d, n);
+	temp = n - one;
+	if (_x == one || _x == temp) {
+		dispose(_a);
+		dispose(_d);
+		dispose(_x);
+		dispose(one);
+		dispose(four);
+		dispose(two);
+		dispose(temp);
+		return true;
+	}
+	while (_d != temp) {
+		_x = _x * _x;
+		_x = _x % n;
+		_d = shiftleft(_d, 1);
+
+		if (_x == one) {
+			dispose(_a);
+			dispose(_d);
+			dispose(_x);
+			dispose(one);
+			dispose(four);
+			dispose(two);
+			dispose(temp);
+			return false;
+		}
+		if (_x == temp) {
+			dispose(_a);
+			dispose(_d);
+			dispose(_x);
+			dispose(one);
+			dispose(four);
+			dispose(two);
+			dispose(temp);
+			return true;
+		}
+	}
+	dispose(_a);
+	dispose(_d);
+	dispose(_x);
+	dispose(one);
+	dispose(four);
+	dispose(two);
+	dispose(temp);
+	return false;
+}
+
+bool isPrime(bigint n, int k) {
+	bigint one, four, three;
+	one = itoBigInt(1);
+	four = itoBigInt(4);
+	three = itoBigInt(3);
+	if (n < one || n == one || n == four) {
+		dispose(one);
+		dispose(four);
+		dispose(three);
+		return false;
+	}
+	if (n < three || n == three) {
+		dispose(one);
+		dispose(four);
+		dispose(three);
+		return true;
+	}
+	dispose(four);
+	dispose(three);
+	bigint d, two;
+	two = itoBigInt(2);
+	d = n - one;
+	while (!(d.data[0] & 1)) {
+		d = shiftright(d, 1);
+	}
+
+	for (int i = 0; i < k; i++) {
+		if (!miillerTest(d, n)) {
+			dispose(d);
+			dispose(two);
+			dispose(one);
+			return false;
+		}
+	}
+	dispose(d);
+	dispose(two);
+	dispose(one);
+	return true;
 }
 
 char* to_string(bigint a, int base) {
@@ -906,8 +954,6 @@ char* to_string(bigint a, int base) {
 					index++;
 				}
 			}
-			//ans[index] = '.';
-			//index++;
 		}
 		if (!hadFirst) {
 			ans = new char[2];

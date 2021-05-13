@@ -86,6 +86,8 @@ unsigned char* to_base58(bigint a, int& count);
 
 bigint randBigInt(bigint max);
 
+bool isPrime(bigint n, int k);
+
 char* to_string(bigint a, int base);
 
 void print(bigint a, int base);
