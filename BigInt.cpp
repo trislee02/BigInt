@@ -124,6 +124,7 @@ bigint twoComplement(bigint a, bool sign) {
 	else {
 		for (int i = 0; i < ans.digit_c; i++) ans.data[i] = 0;
 	}
+	ans.sign = sign;
 	return ans;
 }
 
@@ -227,7 +228,31 @@ bool operator != (bigint a, bigint b) {
 	return !(!(a < b) && !(b < a));
 }
 
+bool isNegative(bigint a) {
+	return !a.sign;
+}
+
+bool isPositive(bigint a) {
+	return a.sign;
+}
+
+bool isZero(bigint a) {
+	a.sign = true;
+	bigint zero = itoBigInt(0);
+	bool ans = a == zero;
+	dispose(zero);
+	return ans;
+}
+
 bigint operator+(bigint a, bigint b) {
+	if (a.sign ^ b.sign) {
+		if (a.sign) {
+			b.sign = true;
+			return a - b;
+		}
+		a.sign = true;
+		return b - a;
+	}
 	int min = a.digit_c < b.digit_c ? a.digit_c : b.digit_c;
 	int max = a.digit_c + b.digit_c - min;
 	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
@@ -256,10 +281,19 @@ bigint operator+(bigint a, bigint b) {
 		ans.data[max - 1] = carry;
 	}
 	ans.digit_c = max;
+	ans.sign = a.sign;
 	return ans;
 }
 
 bigint operator-(bigint a, bigint b) {
+	if (a.sign ^ b.sign) {
+		if (b.sign) {
+			b.sign = false;
+			return a + b;
+		}
+		b.sign = true;
+		return a + b;
+	}
 	bigint ans = init();
 	if (a < b) {
 		ans = b - a;
@@ -324,6 +358,7 @@ bigint operator*(bigint a, bigint b) {
 			int haha = 1;
 		}
 	}
+	ans.sign = !(a.sign ^ b.sign);
 	return ans;
 }
 
@@ -443,7 +478,10 @@ bigint advanced_divide(bigint a, bigint b) {
 }
 
 bigint operator / (bigint a, bigint b) {
-	return advanced_divide(a, b);
+	bigint ans;
+	ans = advanced_divide(a, b);
+	ans.sign = !(a.sign ^ b.sign);
+	return ans;
 }
 
 bigint operator % (bigint a, bigint b) {
@@ -451,6 +489,7 @@ bigint operator % (bigint a, bigint b) {
 	ans = a / b;
 	ans = ans * b;
 	ans = a - ans;
+	ans.sign = !(a.sign ^ b.sign);
 	return ans;
 }
 
@@ -479,7 +518,7 @@ bigint pow(bigint a, bigint b)
 	bigint halfb;
 	halfb = b / two;
 	
-	if (b == zero) {
+	if (isZero(b)) {
 		dispose(zero);
 		dispose(two);
 		dispose(ans);
@@ -494,7 +533,7 @@ bigint pow(bigint a, bigint b)
 	temp = halfb * two;
 	temp = b - temp;
 
-	if (temp == zero) {
+	if (isZero(temp)) {
 		ans = powerhalf * powerhalf;
 	}
 	else
@@ -512,22 +551,47 @@ bigint pow(bigint a, bigint b)
 	return ans;
 }
 
-bigint BigInt(const char* origin, const int n) {
-	bigint ans, radix, ten, one;
-	ans = itoBigInt(0);
-	radix = itoBigInt(0);
-	ten = itoBigInt(10);
-	one = itoBigInt(1);
-	for (int i = 0; i < n; i++) {
-		bigint temp = init();
-		temp = itoBigInt(origin[i] - '0');
-		ans = ans * ten;
-		ans = ans + temp;
-		dispose(temp);
+bigint BigInt(const char* origin, const int n, const int base) {
+	bigint ans;
+	switch (base) {
+	case 10: {
+		bigint radix, ten, one;
+		ans = itoBigInt(0);
+		radix = itoBigInt(0);
+		ten = itoBigInt(10);
+		one = itoBigInt(1);
+		int i = 0;
+		bool sign = true;
+		if (origin[i] == '-') {
+			sign = false;
+			i++;
+		}
+		for (; i < n; i++) {
+			bigint temp = init();
+			temp = itoBigInt(origin[i] - '0');
+			ans = ans * ten;
+			ans = ans + temp;
+			dispose(temp);
+		}
+		dispose(radix);
+		dispose(ten);
+		dispose(one);
+		ans.sign = sign;
+		break;
 	}
-	dispose(radix);
-	dispose(ten);
-	dispose(one);
+	case 2: {
+		int bit = 0;
+		ans.digit_c = n / 8 + 1;
+		ans.data = (unsigned char*)calloc(ans.digit_c, 1);
+		ans.sign = true;
+		for (int i = n - 1; i >= 0; i--) {
+			if (origin[i] - '0')
+				ans.data[bit / 8] += pow(2, bit % 8);
+			bit++;
+		}
+		break;
+	}
+	}
 	return ans;
 }
 
@@ -535,7 +599,7 @@ unsigned char* to_decimal(bigint a, int& count) {
 	bigint zero, ten, t_a;
 	zero = itoBigInt(0);
 	char str[] = "10000000000";
-	ten = BigInt(str, strlen(str));
+	ten = BigInt(str, strlen(str), 10);
 	t_a = duplicate(a);
 	unsigned char pans[1000];
 	unsigned char* ans = NULL;
@@ -592,20 +656,14 @@ unsigned char* to_decimal(bigint a, int& count) {
 	if (count == 0 && index == 0) {
 		index = 1;
 	}
-	if (a < zero)
-		ans = (unsigned char*)realloc(ans, count + index + 1);
-	else 
-		ans = (unsigned char*)realloc(ans, count + index);
+	
+	ans = (unsigned char*)realloc(ans, count + index);
 	
 	for (int i = 0; i < index; i++) {
 		ans[count] = pans[i];
 		count++;
 	}
 
-	if (a < zero) {
-		ans[count] = '-' - '0';
-		count++;
-	}
 	dispose(zero);
 	dispose(ten);
 	dispose(t_a);
@@ -705,7 +763,7 @@ unsigned char* to_base58(bigint a, int& count) {
 		ans[count] = pans[i];
 		count++;
 	}
-
+	
 	dispose(zero);
 	dispose(ten);
 	dispose(t_a);
@@ -872,6 +930,13 @@ bool isPrime(bigint n, int k) {
 	return true;
 }
 
+int digits(bigint a) {
+	int count;
+	unsigned char* ad = to_decimal(a, count);
+	free(ad);
+	return count;
+}
+
 char* to_string(bigint a, int base) {
 	char* ans = NULL;
 	switch (base) {
@@ -918,43 +983,76 @@ char* to_string(bigint a, int base) {
 	}
 	case 10:
 	{
-		int count;
+		int count, sign = 0;
 		unsigned char* ad = to_decimal(a, count);
-		ans = new char[count + 1];
-		for (int i = count - 1; i >= 0; i--) {
-			ans[count - 1 - i] = '0' + ad[i];
+		bigint zero = itoBigInt(0);
+		if (!a.sign && (!isZero(a))) {
+			sign = 1;
+			ans = new char[count + 2];
+			ans[0] = '-';
 		}
-		ans[count] = '\0';
+		else 
+			ans = new char[count + 1];
+		
+		
+		for (int i = count - 1; i >= 0; i--) {
+			ans[count - 1 - i + sign] = '0' + ad[i];
+		}
+		ans[count + sign] = '\0';
 		free(ad);
 		break;
 	}
 	case 2:
 	{
+		bigint _a = duplicate(a);
+		_a = twoComplement(_a, _a.sign);
 		int index = 0;
 		bool hadFirst = false;
 		int count = 0;
-		for (int i = a.digit_c - 1; i >= 0; i--) {
+		for (int i = _a.digit_c - 1; i >= 0; i--) {
 			for (int c = 7; c >= 0; c--)
 			{
-				int k = a.data[i] >> c;
-				if (!hadFirst) {
-					if (k & 1) {
-						hadFirst = true;
-						ans = new char[a.digit_c * 9 + 1 - count];
-						ans[index] = '1';
+				int k = _a.data[i] >> c;
+				if (_a.sign) {
+					if (!hadFirst) {
+						if (k & 1) {
+							hadFirst = true;
+							ans = new char[_a.digit_c * 9 + 1 - count];
+							ans[index] = '1';
+							index++;
+						}
+						else count++;
+					}
+					else {
+						if (k & 1)
+							ans[index] = '1';
+						else
+							ans[index] = '0';
 						index++;
 					}
-					else count++;
 				}
 				else {
-					if (k & 1) 				
-						ans[index] = '1';
-					else
-						ans[index] = '0';
-					index++;
+					if (!hadFirst) {
+						if (k % 2 == 0) {
+							hadFirst = true;
+							ans = new char[_a.digit_c * 9 + 2 - count];
+							ans[index] = '1';
+							ans[index + 1] = '0';
+							index += 2;
+						}
+						else count++;
+					}
+					else {
+						if (k & 1)
+							ans[index] = '1';
+						else
+							ans[index] = '0';
+						index++;
+					}
 				}
 			}
 		}
+
 		if (!hadFirst) {
 			ans = new char[2];
 			ans[0] = '0';
@@ -987,7 +1085,6 @@ void print(bigint a, int base) {
 				else
 					printf("0");
 			}
-			//printf(".");
 		}
 		}
 	}	

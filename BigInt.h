@@ -5,6 +5,7 @@
 #include <math.h>
 #include <time.h>
 #include "StringProcess.h"
+
 #define BASE_256 256
 #define BASE_65536 65536
 
@@ -74,7 +75,7 @@ bigint max(bigint a, bigint b);
 
 bigint pow(bigint a, bigint b);
 
-bigint BigInt(const char* origin, const int n);
+bigint BigInt(const char* origin, const int n, const int base);
 
 unsigned char* to_decimal(bigint a, int& count);
 
@@ -87,6 +88,8 @@ unsigned char* to_base58(bigint a, int& count);
 bigint randBigInt(bigint max);
 
 bool isPrime(bigint n, int k);
+
+int digits(bigint a);
 
 char* to_string(bigint a, int base);
 
