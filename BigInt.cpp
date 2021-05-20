@@ -1,5 +1,6 @@
 #include "BigInt.h"
 
+//Ham khoi tao bigint
 bigint init() {
 	bigint ans;
 	ans.data = NULL;
@@ -8,6 +9,7 @@ bigint init() {
 	return ans;
 }
 
+//Ham giai phong bo nho cua bigint
 void dispose(bigint& a) {
 	if (a.digit_c >= 0 && a.data != NULL) 
 		free(a.data);
@@ -15,6 +17,23 @@ void dispose(bigint& a) {
 	a.data = NULL;
 }
 
+//Ham bo bot cac ky tu 0 o dau cua bigint
+void trim(bigint& a) {
+	int idx = -1;
+	for (int i = a.digit_c - 1; i >= 0; i--) {
+		if (a.data[i] != 0) {
+			idx = i;
+			break;
+		}
+	}
+	if (idx == -1) return;
+	if (idx < a.digit_c - 1) {
+		a.digit_c = idx + 1;
+		a.data = (unsigned char*)realloc(a.data, a.digit_c);
+	}
+}
+
+//Ham nhan ban bigint
 bigint duplicate(bigint a) {
 	bigint res;
 	res.digit_c = a.digit_c;
@@ -27,6 +46,7 @@ bigint duplicate(bigint a) {
 	return res;
 }
 
+//Chuyen doi so nguyen sang bigint
 bigint itoBigInt(int a) {
 	unsigned char* ptr = (unsigned char*)&a;
 	bigint ans = init();
@@ -49,41 +69,43 @@ bigint itoBigInt(int a) {
 	return ans;
 }
 
-
-
-bigint operator&(bigint a, bigint b) {
+bigint operatorAnd(bigint a, bigint b) {
 	int min = a.digit_c < b.digit_c ? a.digit_c : b.digit_c;
 	int max = a.digit_c + b.digit_c - min;
-	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
+	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;		//ptr tro den vung nho co so ky tu nhieu hon	
+	bigint* ptr2 = a.digit_c < b.digit_c ? &a : &b;		//ptr2 tro den vung nho co so ky tu it hon
 	bigint ans = init();
 	ans.data = new unsigned char[max];
 	for (int i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] & b.data[i];
 	}
+	unsigned char smaller = ptr2->sign ? 0 : 255;		//Neu la so am thi them so 1 vao cac bit dau
 	for (int i = min; i < max; i++) {
-		ans.data[i] = (ptr->data[i]) & 0;
+		ans.data[i] = ptr->data[i] & smaller;
 	}
 	ans.digit_c = max;
 	return ans;
 }
 
-bigint operator|(bigint a, bigint b) {
+bigint operatorOr(bigint a, bigint b) {
 	int min = a.digit_c < b.digit_c ? a.digit_c : b.digit_c;
 	int max = a.digit_c + b.digit_c - min;
-	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
+	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;	
+	bigint* ptr2 = a.digit_c < b.digit_c ? &a : &b;
 	bigint ans = init();
 	ans.data = new unsigned char[max];
 	for (int i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] | b.data[i];
 	}
+	unsigned char smaller = ptr2->sign ? 0 : 255;
 	for (int i = min; i < max; i++) {
-		ans.data[i] = ptr->data[i] | 0;
+		ans.data[i] = ptr->data[i] | smaller;
 	}
 	ans.digit_c = max;
 	return ans;
 }
 
-bigint operator~(bigint a) {
+bigint operatorNot(bigint a) {
 	bigint ans = init();
 	ans.data = new unsigned char[a.digit_c];
 	for (int i = 0; i < a.digit_c; i++) {
@@ -93,19 +115,75 @@ bigint operator~(bigint a) {
 	return ans;
 }
 
-bigint operator^(bigint a, bigint b) {
+bigint operatorXor(bigint a, bigint b) {
 	int min = a.digit_c < b.digit_c ? a.digit_c : b.digit_c;
 	int max = a.digit_c + b.digit_c - min;
 	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
+	bigint* ptr2 = a.digit_c < b.digit_c ? &a : &b;
 	bigint ans = init();
 	ans.data = new unsigned char[max];
 	for (int i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] ^ b.data[i];
 	}
+	unsigned char smaller = ptr2->sign ? 0 : 255;
 	for (int i = min; i < max; i++) {
-		ans.data[i] = (ptr->data[i]) ^ 0;
+		ans.data[i] = (ptr->data[i]) ^ smaller;
 	}
 	ans.digit_c = max;
+	return ans;
+}
+
+bigint operator&(bigint a, bigint b) {
+	bigint _a, _b;
+	bigint ans = init();
+	_a = twoComplement(a, a.sign);
+	_b = twoComplement(b, b.sign);
+	ans = operatorAnd(_a, _b);
+	if (!(a.sign ^ b.sign))	//Xet dau cua ket qua
+		ans.sign = a.sign;
+	else 
+		ans.sign = true;
+	ans = twoComplement(ans, ans.sign);
+	dispose(_a);
+	dispose(_b);
+	return ans;
+}
+
+bigint operator|(bigint a, bigint b) {
+	bigint _a, _b;
+	bigint ans = init();
+	_a = twoComplement(a, a.sign);
+	_b = twoComplement(b, b.sign);
+	ans = operatorOr(_a, _b);
+	ans.sign = a.sign & b.sign;
+
+	ans = twoComplement(ans, ans.sign);	
+	dispose(_a);
+	dispose(_b);
+	return ans;
+}
+
+bigint operator~(bigint a) {
+	bigint _a;
+	bigint ans = init();
+	_a = twoComplement(a, a.sign);
+	ans = operatorNot(_a);
+	ans.sign = !a.sign;
+	ans = twoComplement(ans, ans.sign);
+	dispose(_a);
+	return ans;
+}
+
+bigint operator^(bigint a, bigint b) {
+	bigint _a, _b;
+	bigint ans = init();
+	_a = twoComplement(a, a.sign);
+	_b = twoComplement(b, b.sign);
+	ans = operatorXor(_a, _b);
+	ans.sign = !(a.sign ^ b.sign);
+	ans = twoComplement(ans, ans.sign);
+	dispose(_a);
+	dispose(_b);
 	return ans;
 }
 
@@ -113,7 +191,7 @@ bigint twoComplement(bigint a, bool sign) {
 	bigint ans = init();
 	ans = duplicate(a);
 	if (sign) return ans;
-	ans = ~ans;
+	ans = operatorNot(ans);
 	int i = 0;
 	while (((int) ans.data[i]) + 1 > 255 && i < ans.digit_c) {
 		ans.data[i]++;
@@ -202,11 +280,11 @@ bigint shiftright(bigint a, int count) {
 	return ans;
 }
 
-bool operator < (bigint a, bigint b) {
-	if (a.sign && !b.sign) return false;
-	if (!a.sign && b.sign) return true;
-	if (a.sign) {
-		int max = a.digit_c > b.digit_c ? a.digit_c : b.digit_c;
+bool operator < (bigint a, bigint b) {		//Xet lan luot cac truong hop:
+	if (a.sign && !b.sign) return false;	//  + Xet dau
+	if (!a.sign && b.sign) return true;	
+	if (a.sign) {		
+		int max = a.digit_c > b.digit_c ? a.digit_c : b.digit_c;	//	+ So sanh tung ky tu
 		for (int i = max - 1; i >= 0; i--) {
 			if (a.digit_c <= i && b.data[i] != 0) return true;
 			if (b.digit_c <= i && a.data[i] != 0) return false;
@@ -228,6 +306,32 @@ bool operator != (bigint a, bigint b) {
 	return !(!(a < b) && !(b < a));
 }
 
+bigint shiftright(bigint a, bigint count) {
+	bigint ans = init();
+	bigint zero, one, i;
+	zero = itoBigInt(0);
+	one = itoBigInt(1);
+	if (count > zero) ans = shiftOneright(a);
+	for (i = duplicate(count); i > one; i = i - one) ans = shiftOneright(ans);
+	dispose(zero);
+	dispose(one);
+	dispose(i);
+	return ans;
+}
+
+bigint shiftleft(bigint a, bigint count) {
+	bigint ans = init();
+	bigint zero, one, i;
+	zero = itoBigInt(0);
+	one = itoBigInt(1);
+	if (count > zero) ans = shiftOneleft(a);
+	for (i = duplicate(count); i > one; i = i - one) ans = shiftOneleft(ans);
+	dispose(zero);
+	dispose(one);
+	dispose(i);
+	return ans;
+}
+
 bool isNegative(bigint a) {
 	return !a.sign;
 }
@@ -245,7 +349,7 @@ bool isZero(bigint a) {
 }
 
 bigint operator+(bigint a, bigint b) {
-	if (a.sign ^ b.sign) {
+	if (a.sign ^ b.sign) {		//Xet dau cua a va b
 		if (a.sign) {
 			b.sign = true;
 			return a - b;
@@ -286,13 +390,24 @@ bigint operator+(bigint a, bigint b) {
 }
 
 bigint operator-(bigint a, bigint b) {
-	if (a.sign ^ b.sign) {
+	if (a.sign ^ b.sign) {		//Xet dau cua a va b
 		if (b.sign) {
 			b.sign = false;
 			return a + b;
 		}
 		b.sign = true;
 		return a + b;
+	} 
+	else {
+		if (!a.sign) {
+			bigint _a, _b, ans;
+			_a = abs(a);
+			_b = abs(b);
+			ans = _b - _a;
+			dispose(_a);
+			dispose(_b);
+			return ans;
+		}
 	}
 	bigint ans = init();
 	if (a < b) {
@@ -344,7 +459,6 @@ bigint operator*(bigint a, bigint b) {
 			ans.data[i + j] = temp;
 			carry = temp / 256;
 			int h = ans.data[i + j];
-			int haha = 1;
 		}
 		if (carry > 0) {
 			if (i + j >= ans.digit_c) {
@@ -362,14 +476,14 @@ bigint operator*(bigint a, bigint b) {
 	return ans;
 }
 
-bigint simple_divide(bigint a, bigint b) {	
+bigint simple_divide(bigint a, bigint b) {			//Phuong phap chia don gian dang nhi phan bang cach dich bit lien tuc
 	bigint res, _a, _b, one;
 	_a = duplicate(a);
 	_b = duplicate(b);
 	one = itoBigInt(1);
 	res = itoBigInt(0);
 	
-	int count = 0;
+	int count = 0; //Tinh so bit 0 o dau cua bigint a
 	for (int i = _a.digit_c - 1; i >= 0; i--) 
 		for (int c = 7; c >= 0; c--)
 		{
@@ -381,7 +495,7 @@ bigint simple_divide(bigint a, bigint b) {
 			else count++;
 		}
 	
-	int count2 = 0;
+	int count2 = 0;	//Tinh so bit 0 o dau cua bigint b
 	for (int i = _b.digit_c - 1; i >= 0; i--) 
 		for (int c = 7; c >= 0; c--)
 		{
@@ -392,10 +506,10 @@ bigint simple_divide(bigint a, bigint b) {
 			}
 			else count2++;
 	}
-	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2);
+	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2);	//Tinh so bit chenh lech giua a va b
 	
-	_b = shiftleft(_b, bit);
-	while (bit >= 0) {
+	_b = shiftleft(_b, bit);	//Dich bit cua so b de thang hang voi bit dau cua a
+	while (bit >= 0) {			//Dich lien tuc den khi het
 		if (!(_a < _b)) {
 			res.data[0] = res.data[0] + 1;
 			_a = _a - _b;
@@ -413,14 +527,14 @@ bigint simple_divide(bigint a, bigint b) {
 	return res;
 }
 
-bigint advanced_divide(bigint a, bigint b) {
+bigint advanced_divide(bigint a, bigint b) {    //Phuong phap nang cao dung cach lay tung bit cua toan hang a
 	bigint res, _a, _b, t_a = init();
 	res = itoBigInt(0);
 	if (a < b) return res;
 
 	_a = duplicate(a);
 	_b = duplicate(b);	
-	int count = 0;
+	int count = 0;	//Tinh so bit 0 o dau cua bigint a
 	for (int i = _a.digit_c - 1; i >= 0; i--)
 		for (int c = 7; c >= 0; c--)
 		{
@@ -432,7 +546,7 @@ bigint advanced_divide(bigint a, bigint b) {
 			else count++;
 		}
 
-	int count2 = 0;
+	int count2 = 0;	//Tinh so bit 0 o dau cua bigint b
 	for (int i = _b.digit_c - 1; i >= 0; i--)
 		for (int c = 7; c >= 0; c--)
 		{
@@ -443,7 +557,7 @@ bigint advanced_divide(bigint a, bigint b) {
 			}
 			else count2++;
 		}
-	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2);
+	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2); //Tinh bit chenh lech giua so a va b
 	if (count2 < count) 
 		_a = shiftleft(_a, count - count2);
 	else if (count2 > count) _a = shiftleft(_a, 8 - count2 + count);
@@ -479,17 +593,27 @@ bigint advanced_divide(bigint a, bigint b) {
 
 bigint operator / (bigint a, bigint b) {
 	bigint ans;
-	ans = advanced_divide(a, b);
+	bigint _a, _b;
+	_a = abs(a);
+	_b = abs(b);
+	ans = advanced_divide(_a, _b);
 	ans.sign = !(a.sign ^ b.sign);
+	dispose(_a);
+	dispose(_b);
 	return ans;
 }
 
 bigint operator % (bigint a, bigint b) {
 	bigint ans;
-	ans = a / b;
-	ans = ans * b;
-	ans = a - ans;
-	ans.sign = !(a.sign ^ b.sign);
+	bigint _a, _b;
+	_a = abs(a);
+	_b = abs(b);
+	ans = _a / _b;
+	ans = ans * _b;
+	ans = _a - ans;
+	ans.sign = a.sign;
+	dispose(_a);
+	dispose(_b);
 	return ans;
 }
 
@@ -510,11 +634,15 @@ bigint max(bigint a, bigint b) {
 
 bigint pow(bigint a, bigint b)
 {
-	bigint zero, one, two, ans = init();
+	bigint ans;
+	ans = itoBigInt(0);
+	if (b.sign == false)
+		return ans;
+	bigint zero, one, two;
 	zero = itoBigInt(0);
 	one = itoBigInt(1);
 	two = itoBigInt(2);
-	ans = duplicate(zero);
+	
 	bigint halfb;
 	halfb = b / two;
 	
@@ -592,6 +720,7 @@ bigint BigInt(const char* origin, const int n, const int base) {
 		break;
 	}
 	}
+	trim(ans);
 	return ans;
 }
 
@@ -679,11 +808,24 @@ unsigned char* to_base64(bigint a, int& count) {
 		count += padding;
 	}
 	unsigned char* _adata = (unsigned char*)calloc(count, 1);
-	memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
+	int bit = 0, _adatasize = count;
 	count = (count * 8) / 6;
 	ans = (unsigned char*)calloc(count, 1);
-	memset(ans, -1, padding);
-	int bit = padding * 6;
+	if (a.sign) {
+		printf("Count = %d\n", _adatasize);
+		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
+		memset(ans, -1, padding);
+		bit = padding * 6;
+	}
+	else {
+		bigint _a = twoComplement(a, a.sign);
+		printf("Count = %d\n", _adatasize);
+		memcpy(_adata, _a.data, _a.digit_c);
+		memset(&_adata[_a.digit_c], 255, _adatasize - _a.digit_c);
+		bit = 0;
+		dispose(_a);
+	}
+	
 	while (bit < count * 6) {
 		if (_adata[bit / 8] & ((unsigned char)pow(2, bit % 8))) 
 			ans[bit / 6] += pow(2, bit % 6);
@@ -702,11 +844,23 @@ unsigned char* to_base32(bigint a, int& count) {
 		count += padding;
 	}
 	unsigned char* _adata = (unsigned char*)calloc(count, 1);
-	memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
+	int bit = 0, _adatasize = count;
 	count = (count * 8) / 5;
 	ans = (unsigned char*)calloc(count, 1);
-	memset(ans, -1, (padding * 8) / 5);
-	int bit = padding * 5;
+	if (a.sign) {
+		printf("Count = %d\n", _adatasize);
+		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
+		memset(ans, -1, (padding * 8) / 5);
+		bit = padding * 5;
+	}
+	else {
+		bigint _a = twoComplement(a, a.sign);
+		printf("Count = %d\n", _adatasize);
+		memcpy(_adata, _a.data, _a.digit_c);
+		memset(&_adata[_a.digit_c], 255, _adatasize - _a.digit_c);
+		bit = 0;
+		dispose(_a);
+	}
 	while (bit < count * 5) {
 		if (_adata[bit / 8] & ((unsigned char)pow(2, bit % 8)))
 			ans[bit / 5] += pow(2, bit % 5);
@@ -928,6 +1082,10 @@ bool isPrime(bigint n, int k) {
 	dispose(two);
 	dispose(one);
 	return true;
+}
+
+bool is_prime(bigint a) {
+	return isPrime(a, 4);
 }
 
 int digits(bigint a) {

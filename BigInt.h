@@ -27,6 +27,8 @@ bigint init();
 
 void dispose(bigint& a);
 
+void trim(bigint& a);
+
 bigint duplicate(bigint a);
 
 bigint itoBigInt(int a);
@@ -56,6 +58,10 @@ bool operator > (bigint a, bigint b);
 bool operator == (bigint a, bigint b);
 
 bool operator != (bigint a, bigint b);
+
+bigint shiftright(bigint a, bigint count);
+
+bigint shiftleft(bigint a, bigint count);
 
 bigint operator + (bigint a, bigint b);
 
@@ -87,7 +93,7 @@ unsigned char* to_base58(bigint a, int& count);
 
 bigint randBigInt(bigint max);
 
-bool isPrime(bigint n, int k);
+bool is_prime(bigint n);
 
 int digits(bigint a);
 
