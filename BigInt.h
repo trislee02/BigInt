@@ -83,6 +83,8 @@ bigint pow(bigint a, bigint b);
 
 bigint BigInt(const char* origin, const int n, const int base);
 
+bigint BigInt(const char* origin, const int base);
+
 unsigned char* to_decimal(bigint a, int& count);
 
 unsigned char* to_base64(bigint a, int& count);

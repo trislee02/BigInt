@@ -1,4 +1,4 @@
-﻿#include <stdio.h>
+﻿/*#include <stdio.h>
 #include <stdlib.h>
 #include "StringProcess.h"
 #include "BigInt.h"
@@ -40,13 +40,14 @@ void main() {
 	//int xb = -129;
 	//int xc = xa ^ xb;
 	//printf("int: %d\n", xc);
-}
-
-/*
+}*/
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include "BigInt.h"
+#include <time.h>
 #include <string.h>
+
 void readfile(char*& str, int& cnt)
 {
 	FILE* f = fopen("input.txt", "r");
@@ -54,21 +55,21 @@ void readfile(char*& str, int& cnt)
 		printf("File not found!!");
 		return;
 	}
-
 	fseek(f, 0, SEEK_END);
 	cnt = ftell(f);
-	//printf("cnt: %d\n", cnt);
+	printf("cnt: %d\n", cnt);
 	char c;
 	fseek(f, 0, SEEK_SET);
-
-	str = new char[cnt + 1];
+	str = (char*)calloc(cnt + 1, 1);
+	//str = new char[cnt + 1];
 	int index = 0;
 	while (!feof(f)) {
 		fscanf(f, "%c", &c);
 		str[index] = c;
 		index++;
 	}
-	str[index - 2] = '\0';
+	printf("index: %d\n", index);
+	str[index - 1] = '\0';
 	fclose(f);
 }
 
@@ -113,27 +114,159 @@ int main()
 	int text_size, lines_count;
 	readfile(origin, text_size);
 	splitstr(origin, lines, lines_count, '\n');
+	bigint a = init(), b = init(), ans = init();
 	for (int i = 0; i < lines_count; i++) {
 		printf("Dong %d: %s\n", i, lines[i]);
 		int myargv_count;
 		char** myargv;
 		splitstr(lines[i], myargv, myargv_count, ' ');
+		int base = atoi(myargv[0]);
+		if (myargv_count == 4) {			
+			//if (strcmp(myargv[0], "2") == 0) {
+			if (strcmp(myargv[2], "+") == 0) {
+				// myargv[1] + myargv[3] 
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a + b;
+				printf("%s + %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "-") == 0) {
+				// myargv[1] - myargv[3] 
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a - b;
+				printf("%s - %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "*") == 0) {
+				// myargv[1] * myargv[3] 
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a * b;
+				printf("%s * %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "%") == 0) {
+				// myargv[1] % myargv[3] 
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a % b;
+				printf("%s %% %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "/") == 0) {
+				// myargv[1] % myargv[3] 
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a / b;
+				printf("%s / %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], ">>") == 0) {
+				// dịch phải myargv[1] myargv[3] lần
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = shiftright(a, b);
+				printf("%s >> %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "<<") == 0) {
+				// dịch trái myargv[1] myargv[3] lần
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = shiftright(a, b);
+				printf("%s << %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[1], "min") == 0) {
+				// tìm min giữa myargv[2] và myargv[3]
+				a = BigInt(myargv[2], base);
+				b = BigInt(myargv[3], base);
+				ans = min(a, b);
+				printf("min(%s, %s) = %s\n", myargv[2], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[1], "max") == 0) {
+				// tìm max giữa myargv[2] và myargv[3]
+				a = BigInt(myargv[2], base);
+				b = BigInt(myargv[3], base);
+				ans = max(a, b);
+				printf("max(%s, %s) = %s\n", myargv[2], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[1], "pow") == 0) {
+				// myargv[2] mũ myargv[3]
+				a = BigInt(myargv[2], base);
+				b = BigInt(myargv[3], base);
+				ans = pow(a, b);
+				printf("pow(%s, %s) = %s\n", myargv[2], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "&") == 0) {
+				// tìm AND của myargv[1] và myargv[3]
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a & b;
+				printf("%s & %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "|") == 0) {
+				// tìm OR của myargv[1] và myargv[3]
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a | b;
+				printf("%s | %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+			}
+			else if (strcmp(myargv[2], "^") == 0) {
+				// tìm XOR của myargv[1] và myargv[3]
+				a = BigInt(myargv[1], base);
+				b = BigInt(myargv[3], base);
+				ans = a ^ b;
+				printf("%s ^ %s = %s\n", myargv[1], myargv[3], to_string(ans, base));
+				//}
+			}
 
-		if (myargv_count == 3) {
+			//else if (strcmp(myargv[0], "10") == 0) {
+
+		}
+	
+		else if (myargv_count == 3) {
+
 			if (strcmp(myargv[0], "2") == 0) {
-
+				if (strcmp(myargv[1], "10") == 0) {
+					// chuyển myargv[2] từ hệ 2 sang hệ 10
+					a = BigInt(myargv[2], base);
+					printf("%s to base 10 = %s\n", myargv[2], to_string(a, 10));
+				}
 			}
-			else if (strcmp(myargv[0], "pow") == 0) {
-
+			else if (strcmp(myargv[0], "10") == 0) {
+				if (strcmp(myargv[1], "2") == 0) {
+					// chuyển myargv[2] từ hệ 10 sang hệ 2
+					a = BigInt(myargv[2], base);
+					printf("%s to base 2 = %s\n", myargv[2], to_string(a, 2));
+				}
 			}
-		}
-		else if (myargv_count == 4) {
+			if (strcmp(myargv[1], "~") == 0) {
+				// tìm NOT của myargv[2]
+				a = BigInt(myargv[2], base);
+				ans = ~a;
+				printf("~ %s = %s\n", myargv[2], to_string(ans, base));
+			}
+			else if (strcmp(myargv[1], "abs") == 0) {
+				// |myargv[2]|
+				a = BigInt(myargv[2], base);
+				ans = abs(a);
+				printf("abs(%s) = %s\n", myargv[2], to_string(ans, base));
+			}
+			else if (strcmp(myargv[1], "to_base32") == 0) {
+				// to_base32 myargv[2]
+				a = BigInt(myargv[2], base);
+				printf("to_base32(%s) = %s\n", myargv[2], to_string(a, 32));
+			}
+			else if (strcmp(myargv[1], "to_base58") == 0) {
+				// to_base58 myargv[2]
+				a = BigInt(myargv[2], base);
+				printf("to_base58(%s) = %s\n", myargv[2], to_string(a, 58));
+			}
+			else if (strcmp(myargv[1], "to_base64") == 0) {
+				// to_base64 myargv[2]
+				a = BigInt(myargv[2], base);
+				printf("to_base64(%s) = %s\n", myargv[2], to_string(a, 64));
+			}
 
 		}
-
 	}
 	delete[] origin;
 	delete[] lines;
 	return 0;
 }
-*/

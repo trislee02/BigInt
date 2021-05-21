@@ -724,6 +724,10 @@ bigint BigInt(const char* origin, const int n, const int base) {
 	return ans;
 }
 
+bigint BigInt(const char* origin, const int base) {
+	return BigInt(origin, strlen(origin), base);
+}
+
 unsigned char* to_decimal(bigint a, int& count) {
 	bigint zero, ten, t_a;
 	zero = itoBigInt(0);
@@ -812,16 +816,14 @@ unsigned char* to_base64(bigint a, int& count) {
 	count = (count * 8) / 6;
 	ans = (unsigned char*)calloc(count, 1);
 	if (a.sign) {
-		printf("Count = %d\n", _adatasize);
 		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
 		memset(ans, -1, padding);
 		bit = padding * 6;
 	}
 	else {
 		bigint _a = twoComplement(a, a.sign);
-		printf("Count = %d\n", _adatasize);
-		memcpy(_adata, _a.data, _a.digit_c);
-		memset(&_adata[_a.digit_c], 255, _adatasize - _a.digit_c);
+		memset(_adata, 255, _adatasize);
+		memcpy(&_adata[padding == 0 ? 0 : padding], _a.data, _a.digit_c);
 		bit = 0;
 		dispose(_a);
 	}
@@ -848,16 +850,14 @@ unsigned char* to_base32(bigint a, int& count) {
 	count = (count * 8) / 5;
 	ans = (unsigned char*)calloc(count, 1);
 	if (a.sign) {
-		printf("Count = %d\n", _adatasize);
 		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
 		memset(ans, -1, (padding * 8) / 5);
 		bit = padding * 5;
 	}
 	else {
 		bigint _a = twoComplement(a, a.sign);
-		printf("Count = %d\n", _adatasize);
-		memcpy(_adata, _a.data, _a.digit_c);
-		memset(&_adata[_a.digit_c], 255, _adatasize - _a.digit_c);
+		memset(_adata, 255, _adatasize);
+		memcpy(&_adata[padding == 0 ? 0 : padding], _a.data, _a.digit_c);
 		bit = 0;
 		dispose(_a);
 	}
