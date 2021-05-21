@@ -187,6 +187,7 @@ bigint operator^(bigint a, bigint b) {
 	return ans;
 }
 
+//Tham so: bigint va dau muon thuc hien phep bu 2
 bigint twoComplement(bigint a, bool sign) {
 	bigint ans = init();
 	ans = duplicate(a);
@@ -558,18 +559,18 @@ bigint advanced_divide(bigint a, bigint b) {    //Phuong phap nang cao dung cach
 			else count2++;
 		}
 	int bit = _a.digit_c * 8 - count - (_b.digit_c * 8 - count2); //Tinh bit chenh lech giua so a va b
-	if (count2 < count) 
-		_a = shiftleft(_a, count - count2);
+	if (count2 < count) //Dich bit cua mot trong hai so a va b de thang hang bit 1 o dau
+		_a = shiftleft(_a, count - count2);	
 	else if (count2 > count) _a = shiftleft(_a, 8 - count2 + count);
-	res.digit_c = bit / 8 + 1;
-	res.data = (unsigned char*) calloc(res.digit_c, 1);
+	res.digit_c = bit / 8 + 1;	
+	res.data = (unsigned char*) calloc(res.digit_c, 1); //Cap phat vung nho cho bien ket qua dua vao chenh lech bit giua a va b
 	t_a.data = new unsigned char[b.digit_c];
 	t_a.digit_c = b.digit_c;
 	memcpy(t_a.data, &_a.data[_a.digit_c - _b.digit_c], t_a.digit_c);
 	t_a.sign = true;
 	int rad = 7, stt = _a.digit_c - _b.digit_c;
 	stt -= stt > 0 ? 1 : 0;
-	for (; bit >= 0; bit--) {
+	for (; bit >= 0; bit--) {	//Thuc hien vong lap lay tung bit cua so a va dua vao t_a
 		if (!(t_a < _b)) {
 			t_a = t_a - _b;
 			res.data[bit / 8] += (int)pow(2, bit % 8);
@@ -632,7 +633,7 @@ bigint max(bigint a, bigint b) {
 	return a > b ? duplicate(a) : duplicate(b);
 }
 
-bigint pow(bigint a, bigint b)
+bigint pow(bigint a, bigint b) //Thuc hien de quy cho ham pow
 {
 	bigint ans;
 	ans = itoBigInt(0);
@@ -729,10 +730,11 @@ bigint BigInt(const char* origin, const int base) {
 }
 
 unsigned char* to_decimal(bigint a, int& count) {
-	bigint zero, ten, t_a;
+	bigint zero, base, t_a;
 	zero = itoBigInt(0);
-	char str[] = "10000000000";
-	ten = BigInt(str, strlen(str), 10);
+	int digit = 10;
+	char str[] = "10000000000"; //Chia cho 10^10 de lay mot luc 10 ky tu
+	base = BigInt(str, strlen(str), 10);
 	t_a = duplicate(a);
 	unsigned char pans[1000];
 	unsigned char* ans = NULL;
@@ -742,20 +744,19 @@ unsigned char* to_decimal(bigint a, int& count) {
 	t_a = abs(t_a);
 	while (t_a > zero) {
 		bigint temp = init();
-		clock_t begin = clock();
 		bigint t = init();
-		t = t_a / ten;
-		temp = t * ten;
+		t = t_a / base;
+		temp = t * base;
 		temp = t_a - temp;
 		t_a = duplicate(t);
 		dispose(t);
-		unsigned long long int a = 0;
-		for (int i = temp.digit_c - 1; i >= 0; i--) a = a * 256 + (unsigned long long int) temp.data[i];		
+		unsigned long long int aint = 0;
+		for (int i = temp.digit_c - 1; i >= 0; i--) aint = aint * 256 + (unsigned long long int) temp.data[i];	//Luu vao mot bien ull de tinh toan nhanh hon	
 		if (t_a > zero) {
-			int digit = 10;
+			digit = 10;
 			while (digit > 0) {
-				pans[index] = a % 10;
-				a /= 10;
+				pans[index] = aint % 10;
+				aint /= 10;
 				index++;
 				if (index == 1000) {
 					ans = (unsigned char*)realloc(ans, count + index);
@@ -769,9 +770,9 @@ unsigned char* to_decimal(bigint a, int& count) {
 			}
 		}
 		else {
-			while (a > 0) {
-				pans[index] = a % 10;
-				a /= 10;
+			while (aint > 0) {
+				pans[index] = aint % 10;
+				aint /= 10;
 				index++;
 				if (index == 1000) {
 					ans = (unsigned char*)realloc(ans, count + index);
@@ -798,7 +799,7 @@ unsigned char* to_decimal(bigint a, int& count) {
 	}
 
 	dispose(zero);
-	dispose(ten);
+	dispose(base);
 	dispose(t_a);
 	return ans;
 }
@@ -815,7 +816,7 @@ unsigned char* to_base64(bigint a, int& count) {
 	int bit = 0, _adatasize = count;
 	count = (count * 8) / 6;
 	ans = (unsigned char*)calloc(count, 1);
-	if (a.sign) {
+	if (a.sign) { //Xet dau cua a
 		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
 		memset(ans, -1, padding);
 		bit = padding * 6;
@@ -849,7 +850,7 @@ unsigned char* to_base32(bigint a, int& count) {
 	int bit = 0, _adatasize = count;
 	count = (count * 8) / 5;
 	ans = (unsigned char*)calloc(count, 1);
-	if (a.sign) {
+	if (a.sign) {  //Xet dau cua a
 		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
 		memset(ans, -1, (padding * 8) / 5);
 		bit = padding * 5;
@@ -929,12 +930,12 @@ int randint(int lower, int upper) {
 	return (rand() % (upper - lower + 1)) + lower;
 }
 
-bigint randBigInt(bigint max) {
+bigint randBigInt(bigint max) {	//Tao ngau nhien bigint trong khoang tu 2 den max - 1
 	bigint ans;
 	ans.data = new unsigned char[max.digit_c];
 	ans.digit_c = max.digit_c;
 	bool isZero = true;
-	bool isSmaller = false;
+	bool isSmaller = false;	//Kiem tra so dang tao da dat yeu cau nho hon max chua
 	if (max.digit_c == 1) 
 		ans.data[0] = randint(2, max.data[0]);
 	else {
@@ -943,7 +944,7 @@ bigint randBigInt(bigint max) {
 				ans.data[i] = randint(0, max.data[i]);
 				isSmaller = ans.data[i] < max.data[i];
 			}
-			else {
+			else {	//Neu cac so dau nho hon so max thi co the tao ngau nhien tu 0 den 255
 				ans.data[i] = randint(0, 255);
 			}
 			isZero = (ans.data[i] == 0) && isZero;
@@ -959,7 +960,7 @@ bigint randBigInt(bigint max) {
 	return ans;
 }
 
-/*Return: (x^y) % p*/
+//Tra ve: (x^y) % p
 bigint miillerPow(bigint x, bigint y, bigint p) {
 	bigint res, _x, _y, _p, zero;
 
@@ -987,7 +988,7 @@ bigint miillerPow(bigint x, bigint y, bigint p) {
 	return res;
 }
 
-bool miillerTest(bigint d, bigint n) {
+bool miillerTest(bigint d, bigint n) { 
 	bigint _a = init(), _d, _x = init(), four, two, one, temp = init();
 	four = itoBigInt(4);
 	two = itoBigInt(2);
@@ -1044,7 +1045,8 @@ bool miillerTest(bigint d, bigint n) {
 	return false;
 }
 
-bool isPrime(bigint n, int k) {
+//Tham so: bigint va k la so bigint tao ngau nhien
+bool isPrime(bigint n, int k) { //Thuc hien thuat toan Miller Rabin Test 
 	bigint one, four, three;
 	one = itoBigInt(1);
 	four = itoBigInt(4);
