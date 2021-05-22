@@ -15,6 +15,7 @@ void dispose(bigint& a) {
 		free(a.data);
 	a.digit_c = -1;
 	a.data = NULL;
+	a.sign = true;
 }
 
 //Ham bo bot cac ky tu 0 o dau cua bigint
