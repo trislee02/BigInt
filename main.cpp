@@ -3,12 +3,11 @@
 #include <time.h>
 #include "StringProcess.h"
 #include "BigInt.h"
-#include "StringProcess.h"
 
 int main(int argc, char** argv)
 {
 	if (argc != 3) {
-		printf("Error: Missing arguments\n");
+		printf(MISSING_ARGUMENT);
 		return 1;
 	}
 	char* input_name = argv[1];
@@ -23,12 +22,12 @@ int main(int argc, char** argv)
 	bigint a = init(), b = init(), ans = init();
 	FILE* outfile = fopen(output_name, "w");
 	if (outfile == NULL) {
-		printf("Error: Unable to write output!\n");
+		printf(UNABLE_TO_WRITE_OUTPUT);
 		return 1;
 	}
 	for (int i = 0; i < lines_count; i++) {
 		clock_t begin = clock();
-		printf("Status: Processing... - ");
+		printf(PROCESSING);
 		int myargv_count;
 		char** myargv;
 		splitstr(lines[i], myargv, myargv_count, ' ');
@@ -55,14 +54,24 @@ int main(int argc, char** argv)
 			else if (strcmp(myargv[2], "%") == 0) {
 				a = BigInt(myargv[1], base);
 				b = BigInt(myargv[3], base);
-				ans = a % b;
-				fprintf(outfile, "%s\n", to_string(ans, base));
+				if (isZero(b))
+					fprintf(outfile, DIVIDE_BY_ZERO);
+				else
+				{
+					ans = a % b;
+					fprintf(outfile, "%s\n", to_string(ans, base));
+				}
 			}
 			else if (strcmp(myargv[2], "/") == 0) {
 				a = BigInt(myargv[1], base);
 				b = BigInt(myargv[3], base);
-				ans = a / b;
-				fprintf(outfile, "%s\n", to_string(ans, base));
+				if (isZero(b))
+					fprintf(outfile, DIVIDE_BY_ZERO);
+				else
+				{
+					ans = a / b;
+					fprintf(outfile, "%s\n", to_string(ans, base));
+				}
 			}
 			else if (strcmp(myargv[2], ">>") == 0) {
 				a = BigInt(myargv[1], base);
@@ -169,6 +178,6 @@ int main(int argc, char** argv)
 	delete[] origin;
 	delete[] lines;
 	fclose(outfile);
-	printf("Status: Succeed.\n");
+	printf(COMPLETED);
 	return 0;
 }

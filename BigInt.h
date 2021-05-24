@@ -63,6 +63,8 @@ bigint shiftright(bigint a, bigint count);
 
 bigint shiftleft(bigint a, bigint count);
 
+bool isZero(bigint a);
+
 bigint operator + (bigint a, bigint b);
 
 bigint operator - (bigint a, bigint b);

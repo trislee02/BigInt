@@ -31,6 +31,10 @@ void trim(bigint& a) {
 	if (idx < a.digit_c - 1) {
 		a.digit_c = idx + 1;
 		a.data = (unsigned char*)realloc(a.data, a.digit_c);
+		if (a.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return;
+		}
 	}
 }
 
@@ -39,8 +43,13 @@ bigint duplicate(bigint a) {
 	bigint res;
 	res.digit_c = a.digit_c;
 	res.sign = a.sign;
+	res.data = NULL;
 	if (res.digit_c > 0) {
 		res.data = new unsigned char[res.digit_c];
+		if (res.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return res;
+		}
 		memcpy(res.data, a.data, res.digit_c);
 	}
 	else res.data = NULL;
@@ -66,6 +75,10 @@ bigint itoBigInt(int a) {
 	}
 	ans.digit_c = index == 0 ? 1 : index;
 	ans.data = new unsigned char[ans.digit_c];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	for (int i = 0; i < ans.digit_c; i++) ans.data[i] = temp[i];
 	return ans;
 }
@@ -77,6 +90,10 @@ bigint operatorAnd(bigint a, bigint b) {
 	bigint* ptr2 = a.digit_c < b.digit_c ? &a : &b;		//ptr2 tro den vung nho co so ky tu it hon
 	bigint ans = init();
 	ans.data = new unsigned char[max];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	for (int i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] & b.data[i];
 	}
@@ -95,6 +112,10 @@ bigint operatorOr(bigint a, bigint b) {
 	bigint* ptr2 = a.digit_c < b.digit_c ? &a : &b;
 	bigint ans = init();
 	ans.data = new unsigned char[max];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	for (int i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] | b.data[i];
 	}
@@ -109,6 +130,10 @@ bigint operatorOr(bigint a, bigint b) {
 bigint operatorNot(bigint a) {
 	bigint ans = init();
 	ans.data = new unsigned char[a.digit_c];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	for (int i = 0; i < a.digit_c; i++) {
 		ans.data[i] = ~a.data[i];
 	}
@@ -123,6 +148,10 @@ bigint operatorXor(bigint a, bigint b) {
 	bigint* ptr2 = a.digit_c < b.digit_c ? &a : &b;
 	bigint ans = init();
 	ans.data = new unsigned char[max];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	for (int i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] ^ b.data[i];
 	}
@@ -214,10 +243,18 @@ bigint shiftOneleft(bigint a) {
 	ans.digit_c = a.digit_c;
 	ans.sign = a.sign;
 	ans.data = new unsigned char[a.digit_c];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	memcpy(ans.data, a.data, a.digit_c);
 
 	if (ans.data[ans.digit_c - 1] >= 128) {
 		ans.data = (unsigned char*) realloc(ans.data, ans.digit_c + 1);
+		if (ans.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		ans.data[ans.digit_c] = 1;
 		newDigit++;
 	}
@@ -238,6 +275,10 @@ bigint shiftleft(bigint a, int count) {
 	if (count >= 8) {
 		ans.digit_c = count / 8 + a.digit_c;
 		ans.data = (unsigned char*)calloc(ans.digit_c, 1);
+		if (ans.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		memcpy(&ans.data[ans.digit_c - a.digit_c], a.data, a.digit_c);
 		count = count - (count / 8) * 8;
 	}
@@ -255,11 +296,19 @@ bigint shiftOneright(bigint a) {
 	ans.digit_c = a.digit_c;
 	ans.sign = a.sign;
 	ans.data = new unsigned char[a.digit_c];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	memcpy(ans.data, a.data, a.digit_c);
 
 	bool inc = false;
 	if (ans.digit_c > 1 && ans.data[ans.digit_c - 1] == 1) {
 		ans.data = (unsigned char*)realloc(ans.data, ans.digit_c - 1);
+		if (ans.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		newDigit--;
 		inc = true;
 	}
@@ -364,6 +413,10 @@ bigint operator+(bigint a, bigint b) {
 	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
 	bigint ans = init();
 	ans.data = new unsigned char[max];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	int carry = 0, i;
 	for (i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] + b.data[i] + carry;
@@ -384,6 +437,10 @@ bigint operator+(bigint a, bigint b) {
 	else if (carry != 0 && i == max) {
 		max++;
 		ans.data = (unsigned char*)realloc(ans.data, max);
+		if (ans.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		ans.data[max - 1] = carry;
 	}
 	ans.digit_c = max;
@@ -422,6 +479,10 @@ bigint operator-(bigint a, bigint b) {
 	int max = a.digit_c + b.digit_c - min;
 	bigint* ptr = a.digit_c > b.digit_c ? &a : &b;
 	ans.data = new unsigned char[max];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	int borrow = 0, i;
 	for (i = 0; i < min; i++) {
 		ans.data[i] = a.data[i] - b.data[i] - borrow;
@@ -446,6 +507,10 @@ bigint operator-(bigint a, bigint b) {
 	}
 	ans.digit_c = digit + 1;
 	ans.data = (unsigned char*) realloc(ans.data, ans.digit_c);
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	return ans;
 }
 
@@ -453,6 +518,10 @@ bigint operator*(bigint a, bigint b) {
 	bigint ans = init();
 	ans.digit_c = b.digit_c + a.digit_c - 1;
 	ans.data = (unsigned char*)calloc(ans.digit_c, 1);
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	int carry = 0;
 	int i = 0, j = 0;
 	for (i = 0; i < a.digit_c; i++) {
@@ -466,6 +535,10 @@ bigint operator*(bigint a, bigint b) {
 			if (i + j >= ans.digit_c) {
 				ans.digit_c++;
 				ans.data = (unsigned char*)realloc(ans.data, ans.digit_c);
+				if (ans.data == NULL) {
+					printf(INSUFFICIENT_MEMORY);
+					return ans;
+				}
 				ans.data[i + j] = 0;
 			}
 			ans.data[i + j] += carry;
@@ -565,7 +638,15 @@ bigint advanced_divide(bigint a, bigint b) {    //Phuong phap nang cao dung cach
 	else if (count2 > count) _a = shiftleft(_a, 8 - count2 + count);
 	res.digit_c = bit / 8 + 1;	
 	res.data = (unsigned char*) calloc(res.digit_c, 1); //Cap phat vung nho cho bien ket qua dua vao chenh lech bit giua a va b
+	if (res.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return res;
+	}
 	t_a.data = new unsigned char[b.digit_c];
+	if (t_a.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return res;
+	}
 	t_a.digit_c = b.digit_c;
 	memcpy(t_a.data, &_a.data[_a.digit_c - _b.digit_c], t_a.digit_c);
 	t_a.sign = true;
@@ -634,7 +715,7 @@ bigint max(bigint a, bigint b) {
 	return a > b ? duplicate(a) : duplicate(b);
 }
 
-bigint pow(bigint a, bigint b) //Thuc hien de quy cho ham pow
+bigint recursion_pow(bigint a, bigint b) //Thuc hien de quy cho ham pow
 {
 	bigint ans;
 	ans = itoBigInt(0);
@@ -681,6 +762,33 @@ bigint pow(bigint a, bigint b) //Thuc hien de quy cho ham pow
 	return ans;
 }
 
+bigint squaring_pow(bigint a, bigint b) { //Thuc hien luy thua bang squaring
+	clock_t begin = clock();
+	bigint ans = init(), _a, _b;
+	ans = itoBigInt(0);
+	if (b.sign == false)
+		return ans;
+
+	ans = itoBigInt(1);
+	_a = duplicate(a);
+	_b = duplicate(b);
+	while (true) {
+		if (_b.data[0] & 1)
+			ans = ans * _a;
+		_b = shiftright(_b, 1);
+		if (isZero(_b))
+			break;
+		_a = _a * _a;
+	}
+	dispose(_a);
+	dispose(_b);
+	return ans;
+}
+
+bigint pow(bigint a, bigint b) {
+	return squaring_pow(a, b);
+}
+
 bigint BigInt(const char* origin, const int n, const int base) {
 	bigint ans;
 	switch (base) {
@@ -713,6 +821,10 @@ bigint BigInt(const char* origin, const int n, const int base) {
 		int bit = 0;
 		ans.digit_c = n / 8 + 1;
 		ans.data = (unsigned char*)calloc(ans.digit_c, 1);
+		if (ans.data == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		ans.sign = true;
 		for (int i = n - 1; i >= 0; i--) {
 			if (origin[i] - '0')
@@ -761,6 +873,10 @@ unsigned char* to_decimal(bigint a, int& count) {
 				index++;
 				if (index == 1000) {
 					ans = (unsigned char*)realloc(ans, count + index);
+					if (ans == NULL) {
+						printf(INSUFFICIENT_MEMORY);
+						return ans;
+					}
 					for (int i = 0; i < 1000; i++) {
 						ans[count] = pans[i];
 						count++;
@@ -777,6 +893,10 @@ unsigned char* to_decimal(bigint a, int& count) {
 				index++;
 				if (index == 1000) {
 					ans = (unsigned char*)realloc(ans, count + index);
+					if (ans == NULL) {
+						printf(INSUFFICIENT_MEMORY);
+						return ans;
+					}
 					for (int i = 0; i < 1000; i++) {
 						ans[count] = pans[i];
 						count++;
@@ -793,6 +913,10 @@ unsigned char* to_decimal(bigint a, int& count) {
 	}
 	
 	ans = (unsigned char*)realloc(ans, count + index);
+	if (ans == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	
 	for (int i = 0; i < index; i++) {
 		ans[count] = pans[i];
@@ -817,6 +941,10 @@ unsigned char* to_base64(bigint a, int& count) {
 	int bit = 0, _adatasize = count;
 	count = (count * 8) / 6;
 	ans = (unsigned char*)calloc(count, 1);
+	if (ans == NULL || _adata == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	if (a.sign) { //Xet dau cua a
 		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
 		memset(ans, -1, padding);
@@ -851,6 +979,10 @@ unsigned char* to_base32(bigint a, int& count) {
 	int bit = 0, _adatasize = count;
 	count = (count * 8) / 5;
 	ans = (unsigned char*)calloc(count, 1);
+	if (ans == NULL || _adata == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	if (a.sign) {  //Xet dau cua a
 		memcpy(&_adata[padding == 0 ? 0 : padding], a.data, a.digit_c);
 		memset(ans, -1, (padding * 8) / 5);
@@ -895,6 +1027,10 @@ unsigned char* to_base58(bigint a, int& count) {
 		index++;
 		if (index == 1000) {
 			ans = (unsigned char*)realloc(ans, count + index);
+			if (ans == NULL) {
+				printf(INSUFFICIENT_MEMORY);
+				return ans;
+			}
 			for (int i = 0; i < 1000; i++) {
 				ans[count] = pans[i];
 				count++;
@@ -914,7 +1050,10 @@ unsigned char* to_base58(bigint a, int& count) {
 		ans = (unsigned char*)realloc(ans, count + index + 1);
 	else
 		ans = (unsigned char*)realloc(ans, count + index);
-
+	if (ans == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	for (int i = 0; i < index; i++) {
 		ans[count] = pans[i];
 		count++;
@@ -934,6 +1073,10 @@ int randint(int lower, int upper) {
 bigint randBigInt(bigint max) {	//Tao ngau nhien bigint trong khoang tu 2 den max - 1
 	bigint ans;
 	ans.data = new unsigned char[max.digit_c];
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	ans.digit_c = max.digit_c;
 	bool isZero = true;
 	bool isSmaller = false;	//Kiem tra so dang tao da dat yeu cau nho hon max chua
@@ -957,6 +1100,10 @@ bigint randBigInt(bigint max) {	//Tao ngau nhien bigint trong khoang tu 2 den ma
 		}
 	}
 	if (ans.digit_c < max.digit_c) ans.data = (unsigned char*)realloc(ans.data, ans.digit_c);
+	if (ans.data == NULL) {
+		printf(INSUFFICIENT_MEMORY);
+		return ans;
+	}
 	ans.sign = true;
 	return ans;
 }
@@ -1107,6 +1254,10 @@ char* to_string(bigint a, int base) {
 		char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 		unsigned char* ad = to_base64(a, count);
 		ans = new char[count + 1];
+		if (ans == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		for (int i = count - 1; i >= 0; i--) {
 			if (ad[i] == 255) ans[count - 1 - i] = '=';
 			else ans[count - 1 - i] = alphabet[ad[i]];
@@ -1121,6 +1272,10 @@ char* to_string(bigint a, int base) {
 		char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 		unsigned char* ad = to_base32(a, count);
 		ans = new char[count + 1];
+		if (ans == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		for (int i = count - 1; i >= 0; i--) {
 			if (ad[i] == 255) ans[count - 1 - i] = '=';
 			else ans[count - 1 - i] = alphabet[ad[i]];
@@ -1134,6 +1289,10 @@ char* to_string(bigint a, int base) {
 		int count;
 		unsigned char* ad = to_base58(a, count);
 		ans = new char[count + 1];
+		if (ans == NULL) {
+			printf(INSUFFICIENT_MEMORY);
+			return ans;
+		}
 		char alphabet[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 		for (int i = count - 1; i >= 0; i--) {
 			ans[count - 1 - i] = alphabet[ad[i]];
@@ -1150,11 +1309,19 @@ char* to_string(bigint a, int base) {
 		if (!a.sign && (!isZero(a))) {
 			sign = 1;
 			ans = new char[count + 2];
+			if (ans == NULL) {
+				printf(INSUFFICIENT_MEMORY);
+				return ans;
+			}
 			ans[0] = '-';
 		}
-		else 
+		else {
 			ans = new char[count + 1];
-		
+			if (ans == NULL) {
+				printf(INSUFFICIENT_MEMORY);
+				return ans;
+			}
+		}
 		
 		for (int i = count - 1; i >= 0; i--) {
 			ans[count - 1 - i + sign] = '0' + ad[i];
@@ -1179,6 +1346,10 @@ char* to_string(bigint a, int base) {
 						if (k & 1) {
 							hadFirst = true;
 							ans = new char[_a.digit_c * 9 + 1 - count];
+							if (ans == NULL) {
+								printf(INSUFFICIENT_MEMORY);
+								return ans;
+							}
 							ans[index] = '1';
 							index++;
 						}
@@ -1197,6 +1368,10 @@ char* to_string(bigint a, int base) {
 						if (k % 2 == 0) {
 							hadFirst = true;
 							ans = new char[_a.digit_c * 9 + 2 - count];
+							if (ans == NULL) {
+								printf(INSUFFICIENT_MEMORY);
+								return ans;
+							}
 							ans[index] = '1';
 							ans[index + 1] = '0';
 							index += 2;
@@ -1216,6 +1391,10 @@ char* to_string(bigint a, int base) {
 
 		if (!hadFirst) {
 			ans = new char[2];
+			if (ans == NULL) {
+				printf(INSUFFICIENT_MEMORY);
+				return ans;
+			}
 			ans[0] = '0';
 			ans[1] = '\0';
 		}
